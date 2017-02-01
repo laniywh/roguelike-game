@@ -1,0 +1,9 @@
+export default {
+  width: 70,
+  height: 40,
+  rooms: 15,
+  maxRoomWidth: 13,
+  minRoomWidth: 7,
+  wall: 0,
+  room: 1,
+}

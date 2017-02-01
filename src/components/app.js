@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
+import Map from '../containers/map';
 
 export default class App extends Component {
   render() {
     return (
-      <div>React simple starter</div>
+      <div>
+        <div>React Roguelike Dungeon Game</div>
+        <Map />
+      </div>
     );
   }
 }

@@ -1,3 +1,5 @@
+const path = require('path')
+
 module.exports = {
   entry: [
     './src/index.js'
@@ -8,13 +10,19 @@ module.exports = {
     filename: 'bundle.js'
   },
   module: {
-    loaders: [{
-      exclude: /node_modules/,
-      loader: 'babel',
-      query: {
-        presets: ['react', 'es2015', 'stage-1']
-      }
-    }]
+    loaders: [
+      {
+        exclude: /node_modules/,
+        loader: 'babel',
+        query: {
+          presets: ['react', 'es2015', 'stage-1']
+        }
+      },
+      { test: /\.scss?$/,
+        loader: 'style!css!sass',
+        include: path.join(__dirname, 'src', 'style')
+      },
+    ]
   },
   resolve: {
     extensions: ['', '.js', '.jsx']

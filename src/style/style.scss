@@ -1,0 +1,22 @@
+$floor: #999;
+$wall: #333;
+
+.container {
+
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.tile {
+  width: 15px;
+  height: 15px;
+}
+
+.wall {
+  background: $wall;
+}
+
+.room {
+  background: $floor;
+}
