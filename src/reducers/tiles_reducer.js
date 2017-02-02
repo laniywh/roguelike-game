@@ -1,4 +1,4 @@
-import { CREATE_MAP } from '../actions/index';
+import { CREATE_MAP, GENERATE_ENEMIES, HANDLE_MOVE } from '../actions/index';
 import { INITIAL_STATE } from './index';
 import _ from 'lodash';
 import config from '../config.json';
@@ -23,6 +23,7 @@ function createMap(state) {
   let rooms = [];
   let room;
 
+  // Generate rooms
   for(let i = 0; i < config.rooms; i++) {
     // console.log(rooms);
     room = createRoom(rooms);
@@ -42,23 +43,52 @@ function createMap(state) {
       newTiles[room.exit.y][room.exit.x] = config.room;
     }
   }
+
+  // Generate items
+  const enemies = generateItems(newTiles, 'enemy');
+  const healths = generateItems(newTiles, 'health');
+  const portals = generateItems(newTiles, 'portal');
+  const weapons = generateItems(newTiles, 'weapon');
+
+  enemies.forEach(item => {
+    newTiles[item.y][item.x] = config.entities.enemy.tile;
+  });
+
+  healths.forEach(item => {
+    newTiles[item.y][item.x] = config.entities.health.tile;
+  });
+
+  portals.forEach(item => {
+    newTiles[item.y][item.x] = config.entities.portal.tile;
+  });
+
+  weapons.forEach(item => {
+    newTiles[item.y][item.x] = config.entities.weapon.tile;
+  });
+
+  // Generate player
+  const player = createItem(newTiles);
+  // console.log('player');
+  // console.log(player);
+  newTiles[player.y][player.x] = config.entities.player.tile;
+
+
+
   // console.log(newTiles);
 
-  return newTiles;
+  return { tiles: newTiles, player };
 }
 
 function squashRoom(room, rooms) {
-  console.log('squashRoom');
+  // console.log('squashRoom');
   if(rooms.length < 1) return room;
 
   const closestRoom = findClosestRoom(room, rooms);
-  console.log('closestRoom');
-  console.log(closestRoom);
+  // console.log('closestRoom');
+  // console.log(closestRoom);
 
   let movedRoom = {...room};
   movedRoom.exit = {};
-
-  console.log('here');
 
 
   if(isSameRow(closestRoom, room)) {
@@ -167,12 +197,92 @@ function doesCollide(rooms, room) {
   return false;
 }
 
+function generateItems(tiles, item) {
+  // console.log('generateItems');
+
+  let items = [];
+
+  for(let i = 0; i < config.entities[item].num; i++) {
+    // console.log('createItem');
+    items.push(createItem(tiles));
+  }
+
+  // console.log(items);
+
+  return items;
+}
+
+function createItem(tiles) {
+  let x, y;
+
+  do {
+    x = _.random(config.width - 1);
+    y = _.random(config.height - 1);
+  } while(tiles[y][x] !== config.entities.room.tile);
+
+  // console.log(x,y);
+
+  return {x, y};
+}
+
+function handleMove(state, action) {
+  const player = state.player;
+  let tiles = state.tiles;
+  let newPlayer, newLocation;
+
+  switch(action.payload) {
+    case 'ArrowLeft':
+      newLocation = {x: player.x - 1, y: player.y};
+      break;
+
+    case 'ArrowRight':
+      newLocation = {x: player.x + 1, y: player.y};
+      break;
+
+    case 'ArrowUp':
+      newLocation = {x: player.x, y: player.y - 1};
+      break;
+
+    case 'ArrowDown':
+      newLocation = {x: player.x, y: player.y + 1};
+      break;
+
+    default:
+      return state;
+  }
+
+  if(isWall(tiles, newLocation)) return state;
+
+  let newTiles = tiles;
+  newTiles[player.y][player.x] = config.entities.room.tile;
+  newTiles[newLocation.y][newLocation.x] = config.entities.player.tile;
+  newPlayer = { x: newLocation.x, y: newLocation.y};
+
+  return {tiles: newTiles, player: newPlayer};
+}
 
 
-export default function(state = INITIAL_STATE.tiles, action) {
+function isWall(tiles, location) {
+  return tiles[location.y][location.x] === config.entities.wall.tile;
+}
+
+function isRoom(tiles, location) {
+  return tiles[location.y][location.x] === config.entities.room.tile;
+}
+
+function isEnemy(tiles, location) {
+  return tiles[location.y][location.x] === config.entities.enemy.tile;
+}
+
+function isHealth(tiles, location) {
+  return tiles[location.y][location.x] === config.entities.health.tile;
+}
+
+export default function(state = INITIAL_STATE.map, action) {
   switch(action.type) {
-    case CREATE_MAP:
-      return createMap(state);
+    case CREATE_MAP: return createMap(state);
+    // case GENERATE_ENEMIES: return generateEnemies(state);
+    case HANDLE_MOVE: return handleMove(state, action);
 
   }
   return state;

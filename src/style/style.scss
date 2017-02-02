@@ -1,5 +1,15 @@
 $floor: #999;
 $wall: #333;
+$enemy: red;
+$health: green;
+$player: blue;
+$portal: purple;
+$weapon: gold;
+
+body {
+  background: $wall;
+  color: #fff;
+}
 
 .container {
 
@@ -19,4 +29,24 @@ $wall: #333;
 
 .room {
   background: $floor;
+}
+
+.enemy {
+  background: $enemy;
+}
+
+.health {
+  background: $health;
+}
+
+.player {
+  background: $player;
+}
+
+.portal {
+  background: $portal;
+}
+
+.weapon {
+  background: $weapon;
 }

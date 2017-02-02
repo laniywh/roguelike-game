@@ -6,12 +6,14 @@ import _ from 'lodash';
 
 
 export const INITIAL_STATE = {
-  tiles: [],
+  map: {
+    tiles: [],
+  }
 };
 
 
 const rootReducer = combineReducers({
-  tiles: TilesReducer,
+  map: TilesReducer,
 });
 
 export default rootReducer;

@@ -2,8 +2,45 @@ export default {
   width: 70,
   height: 40,
   rooms: 15,
+  enemies: 10,
   maxRoomWidth: 13,
   minRoomWidth: 7,
   wall: 0,
   room: 1,
+  enemy: 2,
+  player: 3,
+
+  entities: {
+    wall: {
+      tile: 0
+    },
+    room: {
+      num: 15,
+      tile: 1,
+    },
+    enemy: {
+      num: 10,
+      tile: 2
+    },
+    player: {
+      num: 1,
+      tile: 3
+    },
+    health: {
+      num: 5,
+      tile: 4
+    },
+    portal: {
+      num: 1,
+      tile: 5
+    },
+    weapon: {
+      num: 1,
+      tile: 6
+    },
+    boss: {
+      num: 1,
+      tile: 7
+    }
+  }
 }
