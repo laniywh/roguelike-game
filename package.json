@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "babel-preset-stage-1": "^6.1.18",
-    "classnames": "^2.2.5",
     "css-loader": "^0.26.1",
     "lodash": "^3.10.1",
     "node-sass": "^4.5.0",

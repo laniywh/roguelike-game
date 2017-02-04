@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Map from './map';
+import Stats from './stats';
 import { handleMove } from '../actions/index';
 
 class App extends Component {
@@ -9,14 +10,17 @@ class App extends Component {
   }
 
   onKeydown(event) {
-    event.preventDefault();
-    this.props.handleMove(event.key);
+    if(event.keyCode > 36 && event.keyCode < 41) {
+      event.preventDefault();
+      this.props.handleMove(event.key);
+    }
   }
 
   render() {
     return (
       <div>
         <div>React Roguelike Dungeon Game</div>
+        <Stats />
         <Map />
       </div>
     );

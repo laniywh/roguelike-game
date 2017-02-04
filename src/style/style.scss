@@ -9,11 +9,24 @@ $weapon: gold;
 body {
   background: $wall;
   color: #fff;
+  font-size: 16px;
 }
 
 .container {
-
+  width: 900px;
+  margin: 0 auto;
 }
+
+.stats{
+  list-style: none;
+  padding-left: 0;
+
+  li {
+    display: inline-block;
+    padding-right: 1.5rem;
+  }
+}
+
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -27,7 +40,7 @@ body {
   background: $wall;
 }
 
-.room {
+.floor {
   background: $floor;
 }
 
