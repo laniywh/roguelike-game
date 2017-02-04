@@ -47,17 +47,17 @@ export const WEAPONS = {
 const ENEMY_TYPES = {
   1: {
     health: 20,
-    attack: 10,
+    attack: 20,
     xp: 10
   },
   2: {
     health: 60,
-    attack: 20,
+    attack: 30,
     xp: 20
   },
   3: {
     health: 100,
-    attack: 30,
+    attack: 40,
     xp: 30
   }
 };
@@ -102,6 +102,7 @@ function createMap(state) {
   console.log('createMap');
 
   let newTiles = allWall(state.tiles);
+  const newDungeon = state.dungeon + 1;
 
   let rooms = [];
   let room;
@@ -130,7 +131,7 @@ function createMap(state) {
   // console.log(newTiles);
 
   // Place all types of items
-  let occupied = createItems(newTiles, state.dungeon + 1);
+  let occupied = createItems(newTiles, newDungeon);
 
   // Place some enemies
   let enemies = {};
@@ -138,7 +139,7 @@ function createMap(state) {
   for(let i = 0; i < ENEMIES; i++) {
     const cell = getRandomEmptyCell(newTiles, occupied);
     occupied[`${cell.x}x${cell.y}`] = 'enemy';
-    enemies[`${cell.x}x${cell.y}`] = { health: ENEMY_TYPES[state.dungeon + 1].health };
+    enemies[`${cell.x}x${cell.y}`] = { health: ENEMY_TYPES[newDungeon].health };
   }
 
   // Place player
@@ -153,7 +154,7 @@ function createMap(state) {
     tiles: newTiles,
     occupied,
     player,
-    dungeon: state.dungeon + 1,
+    dungeon: newDungeon,
     enemies
   };
 }
@@ -341,6 +342,8 @@ function doesCollide(rooms, room) {
 }
 
 function handleMove(state, action) {
+  if(state.player.health < 1) return state;
+
   // const player = state.player;
   const { player, player: { x, y, weaponId }, enemies, occupied, dungeon } = state;
   // let newTiles = state.tiles;
@@ -384,10 +387,8 @@ function handleMove(state, action) {
     const enemyLocation = `${newLocation.x}x${newLocation.y}`;
 
     newEnemies[enemyLocation].health -= damage(playerAtk(player));
-    newPlayer.health -= damage(ENEMY_TYPES[dungeon].attack);
 
-    console.log('enemy health: ', newEnemies[enemyLocation].health);
-
+    // Enemy killed
     if(newEnemies[enemyLocation].health < 1) {
       delete newEnemies[enemyLocation];
       delete newOccupied[enemyLocation];
@@ -402,7 +403,24 @@ function handleMove(state, action) {
         newPlayer.xpNeeded = xpNeeded(newPlayer.level);
         newPlayer.attack = playerAtk(newPlayer);
       }
+    // Enemy still alive
+    } else {
+      newPlayer.health -= damage(ENEMY_TYPES[dungeon].attack);
+
+      // console.log('enemy health: ', newEnemies[enemyLocation].health);
+
+      // Player killed
+      if(newPlayer.health < 1) {
+        console.log('game over');
+
+        console.log(newOccupied);
+        delete newOccupied[`${player.x}x${player.y}`];
+        console.log(newOccupied);
+      }
+
     }
+
+
 
   } else if(isEntity('health', state.occupied, newLocation)) {
     move();
