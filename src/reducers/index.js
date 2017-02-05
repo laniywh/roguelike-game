@@ -11,7 +11,7 @@ const ENEMIES = 10;
 const DUNGEONS = 3;
 const XP_NEEDED_BASED = 50;
 const XP_INCREASE_MULTIPLE = 2;
-const ATK_LVL_INCREASE_MULTIPLE = 4;
+const ATK_LVL_INCREASE_MULTIPLE = 2;
 
 const ITEMS = {
   health: {
@@ -59,6 +59,11 @@ const ENEMY_TYPES = {
     health: 100,
     attack: 40,
     xp: 30
+  },
+  boss: {
+    health: 300,
+    attack: 80,
+    xp: 100
   }
 };
 
@@ -76,7 +81,12 @@ const INITIAL_STATE = {
   },
   dungeon: 0,
   occupied: {},
-  enemies: {}
+  enemies: {},
+  boss: {
+    location: [],
+    health: 0
+  },
+  win: false
 };
 
 function xpNeeded(level) {
@@ -99,7 +109,7 @@ function allWall(tiles) {
 }
 
 function createMap(state) {
-  console.log('createMap');
+  // console.log('createMap');
 
   let newTiles = allWall(state.tiles);
   const newDungeon = state.dungeon + 1;
@@ -137,17 +147,29 @@ function createMap(state) {
   let enemies = {};
 
   for(let i = 0; i < ENEMIES; i++) {
-    const cell = getRandomEmptyCell(newTiles, occupied);
+    const cell = getRandomEmptyCell(newTiles, occupied, true);
     occupied[`${cell.x}x${cell.y}`] = 'enemy';
     enemies[`${cell.x}x${cell.y}`] = { health: ENEMY_TYPES[newDungeon].health };
+  }
+
+  let newBoss = {...state.boss};
+  if(newDungeon === DUNGEONS){
+    // console.log('create boss');
+
+    // Place boss
+    const cell = getRandomEmptyCell(newTiles, occupied, false);
+    const spaces = bossOccupiedSpaces(cell.x, cell.y);
+    spaces.forEach(space => {occupied[space] = 'enemy'});
+
+    newBoss = {
+      location: spaces,
+      health: ENEMY_TYPES.boss.health
+    }
   }
 
   // Place player
   const player = createPlayer(state.player, newTiles, occupied);
   occupied[`${player.x}x${player.y}`] = 'player';
-
-  // console.log(occupied);
-
 
   return {
     ...state,
@@ -155,10 +177,14 @@ function createMap(state) {
     occupied,
     player,
     dungeon: newDungeon,
-    enemies
+    enemies,
+    boss: newBoss
   };
 }
 
+function bossOccupiedSpaces(x, y) {
+  return [`${x}x${y}`, `${x+1}x${y}`, `${x}x${y+1}`, `${x+1}x${y+1}`];
+}
 
 function createItems(tiles, dungeon) {
   let occupied = {};
@@ -168,7 +194,7 @@ function createItems(tiles, dungeon) {
     if(dungeon === DUNGEONS && itemName === 'portal') return;
 
     for(let i = 0; i < ITEMS[itemName].num; i++) {
-      const cell = getRandomEmptyCell(tiles, occupied);
+      const cell = getRandomEmptyCell(tiles, occupied, true);
       occupied[`${cell.x}x${cell.y}`] = itemName;
     }
   });
@@ -177,7 +203,7 @@ function createItems(tiles, dungeon) {
 }
 
 function createPlayer(player, tiles, occupied) {
-  const cell = getRandomEmptyCell(tiles, occupied);
+  const cell = getRandomEmptyCell(tiles, occupied, true);
 
   return {
     ...player,
@@ -186,30 +212,33 @@ function createPlayer(player, tiles, occupied) {
   }
 }
 
-function getRandomEmptyCell(tiles, occupied) {
+function getRandomEmptyCell(tiles, occupied, isSmall) {
   let x, y;
 
-// console.log('getRandomEmptyCell');
+  // console.log('getRandomEmptyCell');
 
-// console.log(tiles);
   do {
     x = _.random(WIDTH - 1);
     y = _.random(HEIGHT - 1);
-  } while(!isEmptyCell(x, y, tiles, occupied));
+  } while(!isEmptyCell(x, y, tiles, occupied, isSmall));
 
   return { x, y }
 }
 
-function isEmptyCell(x, y, tiles, occupied) {
-  // console.log('occupied');
-  // console.log(occupied);
+function isEmptyCell(x, y, tiles, occupied, isSmall) {
+  const topLeft = `${x}x${y}`;
+  const topRight = `${x+1}x${y}`;
+  const bottomRight = `${x+1}x${y+1}`;
+  const bottomLeft = `${x}x${y+1}`;
 
-  const currTile = tiles[y][x];
-  const currOccupied = occupied[x + 'x' + y];
-
-  // console.log(`${x}x${y}`, occupied[x + 'x' + y]);
-
-  return currTile !== 'wall' && !currOccupied;
+  if(isSmall) {
+    return tiles[y][x] !== 'wall' && !occupied[topLeft];
+  } else {
+    return tiles[y][x] !== 'wall' && !occupied[topLeft] &&
+           tiles[y][x+1] !== 'wall' && !occupied[topRight] &&
+           tiles[y+1][x+1] !== 'wall' && !occupied[bottomRight] &&
+           tiles[y+1][x] !== 'wall' && !occupied[bottomLeft];
+  }
 }
 
 function squashRoom(room, rooms) {
@@ -314,11 +343,11 @@ function findClosestRoom(room, rooms) {
 }
 
 function createRoom(rooms) {
-  console.log('createRoom');
+  // console.log('createRoom');
   let room = {};
 
   do {
-    console.log('try');
+    // console.log('try');
 
     room.width = _.random(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
     room.height = _.random(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
@@ -344,114 +373,135 @@ function doesCollide(rooms, room) {
 function handleMove(state, action) {
   if(state.player.health < 1) return state;
 
-  // const player = state.player;
-  const { player, player: { x, y, weaponId }, enemies, occupied, dungeon } = state;
-  // let newTiles = state.tiles;
-  let newPlayer, newLocation, newOccupied, newWeapon, newTiles, newEnemies;
-  newEnemies = { ...enemies };
-  newPlayer = {...player};
-  newOccupied = {...occupied};
-  // newWeaponId = weaponId;
+  const x = state.player.x;
+  const y = state.player.y;
 
-  switch(action.payload) {
-    case 'ArrowLeft':
-      // newLocation = {x: player.x - 1, y: player.y};
-      newLocation = {x: x - 1, y };
-      // x = player.x - 1;
-      break;
+  const newLocation = getNewLocation(action.payload, x, y);
 
-    case 'ArrowRight':
-      newLocation = {x: x + 1, y};
-      break;
+  if(!newLocation || isWall(state.tiles, newLocation)) return state;
 
-    case 'ArrowUp':
-      newLocation = {x, y: y - 1};
-      break;
-
-    case 'ArrowDown':
-      newLocation = {x, y: y + 1};
-      break;
-
-    default:
-      return state;
+  if(isEmptyCell(newLocation.x, newLocation.y, state.tiles, state.occupied, true)) {
+    return move(state, newLocation);
   }
 
-  if(isWall(state.tiles, newLocation)) return state;
+  switch(getEntity(state.occupied, newLocation)) {
+    case 'enemy': return getFightState(state, newLocation);
+    case 'health': return getGainHealthState(state, newLocation);
+    case 'weapon': return getChangeWeaponState(state, newLocation);
+    case 'portal': return createMap(state);
+  }
+}
 
-  // console.log(state.occupied);
+function getChangeWeaponState(state, newLocation) {
+    let newState = move(state, newLocation);
 
-  if(isEmptyCell(newLocation.x, newLocation.y, state.tiles, state.occupied)) {
-    move();
+    newState.player.weaponId = state.dungeon;
+    newState.player.attack = playerAtk(newState.player);
 
-  } else if(isEntity('enemy', state.occupied, newLocation)) {
-    const enemyLocation = `${newLocation.x}x${newLocation.y}`;
+    return newState;
+}
 
-    newEnemies[enemyLocation].health -= damage(playerAtk(player));
+function getGainHealthState(state, newLocation) {
+  let newState = move(state, newLocation);
 
-    // Enemy killed
-    if(newEnemies[enemyLocation].health < 1) {
-      delete newEnemies[enemyLocation];
-      delete newOccupied[enemyLocation];
+  newState.player.health += HEALTH_INCREASE;
 
-      // Gain XP
-      newPlayer.xp += ENEMY_TYPES[dungeon].xp;
-      newPlayer.xpNeeded = xpNeeded(newPlayer.level) - newPlayer.xp;
+  return newState;
+}
 
-      // Level up
-      if(newPlayer.xpNeeded < 1) {
-        newPlayer.level++;
-        newPlayer.xpNeeded = xpNeeded(newPlayer.level);
-        newPlayer.attack = playerAtk(newPlayer);
-      }
-    // Enemy still alive
+function getFightState(state, newLocation) {
+  let newState = {...state, win: false};
+  let enemyHealth, newBoss;
+  let newOccupied = {...state.occupied};
+  let player = newState.player;
+
+  const enemyLocation = `${newLocation.x}x${newLocation.y}`;
+  const isBoss = isBossCheck(state.boss, enemyLocation);
+
+  const enemyDamage = damage(playerAtk(state.player));
+
+  // update enemy health
+  if(isBoss) {
+    enemyHealth = newState.boss.health -= enemyDamage;
+  } else {
+    enemyHealth = newState.enemies[enemyLocation].health -= enemyDamage;
+  }
+
+  // Enemy killed
+  if(enemyHealth < 1) {
+    // console.log('enemy killed');
+
+    if(isBoss) {
+      // win
+      console.log('win');
+
+      newState.win = true;
+      newState.boss.location.forEach(space => {delete newOccupied[space]});
     } else {
-      newPlayer.health -= damage(ENEMY_TYPES[dungeon].attack);
-
-      // console.log('enemy health: ', newEnemies[enemyLocation].health);
-
-      // Player killed
-      if(newPlayer.health < 1) {
-        console.log('game over');
-
-        console.log(newOccupied);
-        delete newOccupied[`${player.x}x${player.y}`];
-        console.log(newOccupied);
-      }
-
+      delete newState.enemies[enemyLocation];
+      delete newOccupied[enemyLocation];
     }
 
+    // Player gain XP
+    const enemyType = isBoss ? 'boss' : state.dungeon;
+    const enemyXp = ENEMY_TYPES[enemyType].xp
 
+    player.xp += ENEMY_TYPES[enemyType].xp;
+    player.xpNeeded -= enemyXp;
 
-  } else if(isEntity('health', state.occupied, newLocation)) {
-    move();
+    // Player level up
+    if(player.xpNeeded < 1) {
+      player.level++;
+      player.xpNeeded = xpNeeded(player.level);
+      player.attack = playerAtk(player);
+    }
 
-    newPlayer = {...newPlayer, health: newPlayer.health + HEALTH_INCREASE};
-
-  } else if(isEntity('weapon', state.occupied, newLocation)) {
-    move();
-
-    // newWeaponId = state.dungeon;
-    newPlayer.weaponId = state.dungeon;
-    newPlayer.attack = playerAtk(newPlayer);
-
-  } else if(isEntity('portal', state.occupied, newLocation)) {
-    return createMap(state);
+  // Enemy still alive
+  } else {
+    player.health -= damage(ENEMY_TYPES[isBoss ? 'boss' : state.dungeon].attack);
   }
 
-  function move() {
-    newPlayer = {...newPlayer, x: newLocation.x, y: newLocation.y};
-    delete newOccupied[`${x}x${y}`];
-    newOccupied[`${newPlayer.x}x${newPlayer.y}`] = 'player';
+  // Player killed
+  if(player.health < 1) {
+    console.log('game over');
+
+    delete newOccupied[`${player.x}x${player.y}`];
   }
 
-  // console.log(newPlayer);
+  newState = {...newState, occupied: newOccupied};
+
+  return newState;
+}
+
+function getNewLocation(keyCode, x, y) {
+  switch(keyCode) {
+    case 'ArrowLeft': return {x: x - 1, y };
+    case 'ArrowRight': return {x: x + 1, y};
+    case 'ArrowUp': return {x, y: y - 1};
+    case 'ArrowDown': return {x, y: y + 1};
+    default: return null;
+  }
+}
+
+function move(state, newLocation) {
+  const newOccupied = {...state.occupied};
+  delete newOccupied[state.player.x + 'x' + state.player.y];
+  newOccupied[`${newLocation.x}x${newLocation.y}`] = 'player';
 
   return {
     ...state,
-    player: newPlayer,
     occupied: newOccupied,
-    enemies: newEnemies
+    player: {
+      ...state.player,
+      x: newLocation.x,
+      y: newLocation.y
+    }
   };
+  // return state;
+}
+
+function isBossCheck(boss, location) {
+  return boss.location.includes(location);
 }
 
 function playerAtk(player) {
@@ -471,10 +521,13 @@ function isEntity(name, occupied, location) {
   return occupied[location.x + 'x' + location.y] === name;
 }
 
+function getEntity(occupied, location) {
+  return occupied[location.x + 'x' + location.y];
+}
+
 export default function(state = INITIAL_STATE, action) {
   switch(action.type) {
     case CREATE_MAP: return createMap(state);
-    // case GENERATE_ENEMIES: return generateEnemies(state);
     case HANDLE_MOVE: return handleMove(state, action);
   }
   return state;
