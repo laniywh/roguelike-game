@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { WEAPONS } from '../reducers';
+import { toggleDarkness } from '../actions';
 
 class Stats extends Component {
   render() {
-    const { level, dungeon, health, xp, xpNeeded, weaponId, attack } = this.props;
+    const { level, dungeon, health, xp, xpNeeded, weaponId, attack, toggleDarkness } = this.props;
     return (
       <ul className="stats">
         <li>Level: {level}</li>
@@ -14,6 +15,7 @@ class Stats extends Component {
         <li>Weapon: {WEAPONS[weaponId].name}</li>
         <li>Attack: {attack}</li>
         <li>Dungeon: {dungeon}</li>
+        <li><button onClick={toggleDarkness}>Toggle Darkness</button></li>
       </ul>
     );
 
@@ -32,4 +34,4 @@ const mapStateToProps = state => {
   }
 }
 
-export default connect(mapStateToProps)(Stats);
+export default connect(mapStateToProps, {toggleDarkness})(Stats);

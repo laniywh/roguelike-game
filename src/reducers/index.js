@@ -1,4 +1,4 @@
-import { CREATE_MAP, GENERATE_ENEMIES, HANDLE_MOVE } from '../actions/index';
+import { CREATE_MAP, GENERATE_ENEMIES, HANDLE_MOVE, TOGGLE_DARKNESS } from '../actions/index';
 import _ from 'lodash';
 
 const WIDTH = 50;
@@ -86,7 +86,8 @@ const INITIAL_STATE = {
     location: [],
     health: 0
   },
-  win: false
+  win: false,
+  dark: true
 };
 
 function xpNeeded(level) {
@@ -525,10 +526,18 @@ function getEntity(occupied, location) {
   return occupied[location.x + 'x' + location.y];
 }
 
+function toggleDarkness(state) {
+  return {
+    ...state,
+    dark: !state.dark,
+  }
+}
+
 export default function(state = INITIAL_STATE, action) {
   switch(action.type) {
     case CREATE_MAP: return createMap(state);
     case HANDLE_MOVE: return handleMove(state, action);
+    case TOGGLE_DARKNESS: return toggleDarkness(state);
   }
   return state;
 }

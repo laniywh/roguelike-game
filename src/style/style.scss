@@ -7,7 +7,7 @@ $portal: purple;
 $weapon: gold;
 
 body {
-  background: $wall;
+  background: #000;
   color: #fff;
   font-size: 16px;
 }
@@ -15,6 +15,10 @@ body {
 .container {
   width: 900px;
   margin: 0 auto;
+}
+
+.wall {
+  background: $wall;
 }
 
 .stats{
@@ -30,6 +34,10 @@ body {
 .flex-row {
   display: flex;
   flex-direction: row;
+}
+
+.dark {
+  background: #000;
 }
 .tile {
   width: 15px;
