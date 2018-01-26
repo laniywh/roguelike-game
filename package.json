@@ -1,8 +1,7 @@
 {
   "name": "redux-simple-starter",
   "version": "1.0.0",
-  "description":
-    "Simple starter package for Redux with React and Babel support",
+  "description": "Simple starter package for Redux with React and Babel support",
   "main": "index.js",
   "engines": {
     "node": "8.7.0",
@@ -13,8 +12,7 @@
     "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
     "prod": "NODE_ENV=production node server.js",
     "postinstall": "webpack -p",
-    "test":
-      "mocha --compilers js:babel-core/register --require ./test/test_helper.js --recursive ./test",
+    "test": "mocha --compilers js:babel-core/register --require ./test/test_helper.js --recursive ./test",
     "test:watch": "npm run test -- --watch"
   },
   "author": "",
@@ -35,6 +33,7 @@
   "dependencies": {
     "babel-preset-stage-1": "^6.1.18",
     "css-loader": "^0.26.1",
+    "express": "^4.16.2",
     "lodash": "^3.10.1",
     "node-sass": "^4.5.0",
     "react": "^0.14.3",
