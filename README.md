@@ -2,7 +2,7 @@
 A ReactJS app built for [a freeCodeCamp project](https://www.freecodecamp.org/challenges/build-a-roguelike-dungeon-crawler-game).
 
 ## Demo
-Coming soon...
+https://roguelike-lani.herokuapp.com/
 
 ### Boilerplate
 https://github.com/StephenGrider/ReduxSimpleStarter
