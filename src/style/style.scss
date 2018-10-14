@@ -21,7 +21,7 @@ body {
   background: $wall;
 }
 
-.stats{
+.stats {
   list-style: none;
   padding-left: 0;
 
@@ -53,21 +53,26 @@ body {
 }
 
 .enemy {
-  background: $enemy;
+  background-image: url(https://res.cloudinary.com/daaer2agg/image/upload/v1539558483/enemy.png);
+  background-size: cover;
 }
 
 .health {
-  background: $health;
+  background-image: url(https://res.cloudinary.com/daaer2agg/image/upload/v1539557755/health.png);
+  background-size: cover;
 }
 
 .player {
-  background: $player;
+  background-image: url(https://res.cloudinary.com/daaer2agg/image/upload/v1539557432/cat.png);
+  background-size: cover;
 }
 
 .portal {
-  background: $portal;
+  background-image: url(https://res.cloudinary.com/daaer2agg/image/upload/v1539558644/portal.png);
+  background-size: cover;
 }
 
 .weapon {
-  background: $weapon;
+  background-image: url(https://res.cloudinary.com/daaer2agg/image/upload/v1539558214/weapon.png);
+  background-size: cover;
 }
